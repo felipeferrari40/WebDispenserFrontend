@@ -8,9 +8,23 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { ref } from "vue";
 
+library.add(faBone, faRightToBracket, faBars);
+
 const isMenuOpen = ref(false);
 
-library.add(faBone, faRightToBracket, faBars);
+function scrollToSection(id: string) {
+  const element = document.getElementById(id);
+  if (element) {
+    const sectionBottom =
+      element.getBoundingClientRect().bottom + window.scrollY;
+    const scrollPosition = sectionBottom - window.innerHeight;
+
+    window.scrollTo({
+      top: scrollPosition,
+      behavior: "smooth",
+    });
+  }
+}
 </script>
 
 <template>
@@ -23,53 +37,52 @@ library.add(faBone, faRightToBracket, faBars);
         <h1 class>BOM GAROTO</h1>
       </div>
       <div class="flex justify-end items-center font-thin">
+        <button @click="isMenuOpen = !isMenuOpen" class="md:hidden p-4">
+          <font-awesome-icon icon="bars" class="text-2xl" />
+        </button>
         <ul class="hidden md:flex space-x-5">
           <li>
             <RouterLink
-              class="hover:bg-fontcolor hover:text-black rounded-full p-5 flex"
+              class="hover:bg-fontcolor hover:text-black rounded-full p-5 block"
               to="/"
-              href="#home"
+              @click="scrollToSection('home')"
               >Home</RouterLink
             >
           </li>
           <li>
-            <a
-              href="#about"
-              class="hover:bg-fontcolor hover:text-black rounded-full p-5 flex"
-              >Sobre</a
+            <RouterLink
+              class="hover:bg-fontcolor hover:text-black rounded-full p-5 block"
+              to="/"
+              @click="scrollToSection('about')"
+              >Sobre</RouterLink
             >
           </li>
           <li>
-            <a
-              href="#services"
-              class="hover:bg-fontcolor hover:text-black rounded-full p-5 flex"
-              >Serviços</a
+            <RouterLink
+              class="hover:bg-fontcolor hover:text-black rounded-full p-5 block"
+              to="/"
+              @click="scrollToSection('services')"
+              >Serviços</RouterLink
             >
           </li>
           <li>
-            <a
-              href="#contact"
-              class="hover:bg-fontcolor hover:text-black rounded-full p-5 flex"
-              >Contato</a
+            <RouterLink
+              class="hover:bg-fontcolor hover:text-black rounded-full p-5 block"
+              to="/"
+              @click="scrollToSection('contact')"
+              >Contato</RouterLink
             >
           </li>
           <li class="flex">
-            <a
-              href="./login.html"
+            <RouterLink
               class="hover:bg-fontcolor bg-purple-500 hover:text-black rounded-full p-5"
+              to="/login"
             >
-              <font-awesome-icon :icon="['fas', 'right-to-bracket']" />
-              Login
-            </a>
+              <font-awesome-icon icon="right-to-bracket" />
+              Login</RouterLink
+            >
           </li>
         </ul>
-
-        <div class="flex md:hidden">
-          <button @click="isMenuOpen = !isMenuOpen" class="p-4">
-            <font-awesome-icon icon="bars" class="text-2xl" />
-          </button>
-        </div>
-
         <div
           v-if="isMenuOpen"
           class="absolute top-20 right-0 bg-bgcolor shadow-md rounded-md w-full text-fontcolor"
@@ -79,13 +92,13 @@ library.add(faBone, faRightToBracket, faBars);
               <RouterLink
                 class="hover:bg-fontcolor hover:text-black rounded-md p-3 block"
                 to="/"
-                href="#home"
+                @click="scrollToSection('#home')"
                 >Home</RouterLink
               >
             </li>
             <li>
               <a
-                href="#about"
+                @click="scrollToSection('#about')"
                 class="hover:bg-fontcolor hover:text-black rounded-md p-3 block"
                 >Sobre</a
               >
@@ -109,7 +122,7 @@ library.add(faBone, faRightToBracket, faBars);
                 href="./login.html"
                 class="hover:bg-fontcolor bg-purple-500 hover:text-black rounded-md p-3 block"
               >
-                <font-awesome-icon :icon="['fas', 'right-to-bracket']" />
+                <font-awesome-icon icon="right-to-bracket" />
                 Login
               </a>
             </li>

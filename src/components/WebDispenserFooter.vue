@@ -13,7 +13,6 @@
         >Contato</a
       >
       <a href="https://discord.gg/mY9ahUxesZ" class="hover:underline flex items-center gap-2">
-        <FontAwesomeIcon icon="fa-brands discord"/>
         Discord</a
       >
     </div>
