@@ -1,0 +1,80 @@
+import apiClient from "@/services/axios";
+import { showToast } from "@/components/showToast";
+
+export function register(name: string, email: string, password: string) {
+  apiClient
+    .post("/api/register", {
+      name: name,
+      email: email,
+      password: password,
+    })
+    .then((response) => {
+      const signUpStatus = response.data["status"];
+      const message = response.data["message"];
+
+      if (signUpStatus === "success") {
+        showToast("Cadastro bem-sucedido! " + message, "success");
+      } else {
+        showToast("Falha no cadastro. " + message);
+      }
+    })
+    .catch((error) => {
+      showToast("Erro ao cadastrar. " + error);
+    });
+}
+
+export function logout(): Promise<boolean> {
+  localStorage.removeItem("authToken");
+  delete apiClient.defaults.headers.common["Authorization"];
+  return Promise.resolve(true)
+}
+
+export function login(email: string, password: string): Promise<boolean> {
+  return apiClient
+    .post("/api/login", {
+      email: email,
+      password: password,
+    })
+    .then((response) => {
+      const message = response.data["message"];
+      const token = response.data["token"];
+
+      if (message) {
+        showToast("Falha no Login! " + message);
+        return false;
+      } else if (token) {
+        showToast("Login bem-sucedido!", "success");
+        setAuthToken(token);
+        return true;
+      }
+      return false;
+    })
+    .catch((error) => {
+      showToast("Falha no login. " + error);
+      return false;
+    });
+}
+
+export function isAuthenticated() {
+  const token = localStorage.getItem("authToken");
+
+  if (!token) {
+    showToast("Token ausente. Faça login novamente.");
+    return false;
+  }
+
+  return apiClient
+    .get(`/api/user?token=${token}`)
+    .then((response) => {
+      return response.status === 200;
+    })
+    .catch((error) => {
+      showToast("Erro de autenticação. Por favor, faça login novamente.");
+      return false;
+    });
+}
+
+function setAuthToken(token: string) {
+  localStorage.setItem("authToken", token);
+  apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+}

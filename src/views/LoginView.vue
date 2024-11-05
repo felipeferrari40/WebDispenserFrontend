@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { onMounted, ref } from "vue";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import {
@@ -11,51 +11,65 @@ import {
   faEyeSlash,
 } from "@fortawesome/free-solid-svg-icons";
 
+import { login, register } from "@/router/auth";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
+
 library.add(faLock, faUser, faRightToBracket, faBars, faEye, faEyeSlash);
 
-const userID = ref<string>("");
-const userPassword = ref<string>("");
-const rememberMe = ref<boolean>(false);
+const name = ref<string>("");
+const email = ref<string>("");
+const forget = ref<string>("");
+const password = ref<string>("");
 const showPassword = ref<boolean>(false);
 const isModalOpen = ref<boolean>(false);
-const email = ref<string>("");
 
-const togglePassword = () => {
+function togglePassword() {
   showPassword.value = !showPassword.value;
-};
+}
 
-const openModal = () => {
+function openModal() {
   isModalOpen.value = true;
-};
+}
 
-const closeModal = () => {
+function closeModal() {
   isModalOpen.value = false;
-};
+}
 
-const login = () => {
-  if (rememberMe.value) {
-    localStorage.setItem("savedUserID", userID.value);
-    localStorage.setItem("savedUserPassword", userPassword.value);
-  } else {
-    localStorage.removeItem("savedUserID");
-    localStorage.removeItem("savedUserPassword");
+const isSignUpModalOpen = ref<boolean>(false);
+
+function openSignUpModal() {
+  isSignUpModalOpen.value = true;
+}
+
+function closeSignUpModal() {
+  isSignUpModalOpen.value = false;
+}
+
+function signUp(name: string, email: string, password: string) {
+  register(name, email, password);
+  closeSignUpModal();
+}
+
+async function handleLogin(email:string, password:string) {
+  const success = await login(email, password);
+  if (success) {
+    router.push("/dashboard");
   }
-};
+}
 
-const sendEmail = () => {
-  alert("Email enviado para " + email.value);
-};
+function sendEmail(email: string) {
+  alert("Email enviado para " + email);
+}
 
 onMounted(() => {
-  const savedUserID = localStorage.getItem("savedUserID");
-  const savedUserPassword = localStorage.getItem("savedUserPassword");
-
-  if (savedUserID && savedUserPassword) {
-    userID.value = savedUserID;
-    userPassword.value = savedUserPassword;
-    rememberMe.value = true;
+  const token = localStorage.getItem("authToken");
+  
+  if (token) {
+    router.push("/dashboard");
   }
-});
+})
 </script>
 
 <template>
@@ -63,10 +77,10 @@ onMounted(() => {
     class="flex items-center justify-center min-h-screen bg-gray-900 mt-20 text-white font-sans"
   >
     <div
-      class="flex flex-col  lg:flex-row bg-gray-800 rounded-3xl shadow-lg overflow-hidden w-full max-w-4xl"
+      class="flex flex-col lg:flex-row bg-gray-800 rounded-3xl w-3/4 shadow-lg overflow-hidden max-w-4xl"
     >
       <div
-        class="flex flex-col items-center w-full lg:w-1/2 my-auto p-8 text-center space-y-6"
+        class="flex flex-col items-center lg:w-1/2 my-auto p-8 text-center space-y-6"
       >
         <font-awesome-icon icon="user" class="text-4xl mb-4" />
 
@@ -80,7 +94,7 @@ onMounted(() => {
           <input
             type="text"
             placeholder="Digite seu ID"
-            v-model="userID"
+            v-model="email"
             class="w-full pl-10 p-2 bg-gray-700 rounded-lg outline-none text-white"
           />
         </div>
@@ -93,7 +107,7 @@ onMounted(() => {
           <input
             :type="showPassword ? 'text' : 'password'"
             placeholder="Senha"
-            v-model="userPassword"
+            v-model="password"
             class="w-full pl-10 pr-10 p-2 bg-gray-700 rounded-lg outline-none text-white"
           />
           <span
@@ -107,25 +121,20 @@ onMounted(() => {
         </div>
 
         <div class="flex justify-between items-center w-3/4 lg:w-2/3 text-sm">
-          <label class="flex items-center space-x-2 cursor-pointer">
-            <input
-              type="checkbox"
-              v-model="rememberMe"
-              class="form-checkbox text-purple-500"
-            />
-            <span>Lembrar-me</span>
-          </label>
           <button @click="openModal" class="text-purple-400 underline">
-            Esqueceu seu ID?
+            Esqueceu seu email?
           </button>
         </div>
 
         <button
-          @click="login"
+          @click="handleLogin(email, password)"
           class="flex items-center justify-center bg-purple-500 hover:bg-purple-600 transition rounded-lg p-2 w-3/4 lg:w-2/3 text-lg space-x-2"
         >
           <font-awesome-icon icon="right-to-bracket" />
           <span>Entrar</span>
+        </button>
+        <button @click="openSignUpModal" class="text-purple-400 underline mt-2">
+          Não tem uma conta? Cadastre-se
         </button>
       </div>
 
@@ -149,7 +158,7 @@ onMounted(() => {
       >
         <button
           @click="closeModal"
-          class="absolute top-2 right-2 text-2xl text-gray-400 hover:text-white"
+          class="ml-auto flex text-2xl text-gray-400 hover:text-white hover:cursor-pointer"
         >
           &times;
         </button>
@@ -158,11 +167,11 @@ onMounted(() => {
         <input
           type="email"
           placeholder="Email"
-          v-model="email"
+          v-model="forget"
           class="w-10/12 p-2 mb-4 bg-gray-700 rounded-lg outline-none text-white"
         />
         <button
-          @click="sendEmail"
+          @click="sendEmail(email)"
           class="bg-purple-500 hover:bg-purple-600 transition w-1/2 p-2 rounded-lg"
         >
           Enviar
@@ -170,4 +179,50 @@ onMounted(() => {
       </div>
     </div>
   </div>
+  <div
+    v-if="isSignUpModalOpen"
+    class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75 z-50"
+  >
+    <div
+      class="bg-gray-800 rounded-xl p-6 w-11/12 max-w-lg shadow-lg text-center text-white"
+    >
+      <button
+        @click="closeSignUpModal"
+        class="flex ml-auto top-2 right-2 text-2xl text-gray-400 hover:text-white"
+      >
+        &times;
+      </button>
+      <h2 class="text-xl mb-4">Cadastre-se</h2>
+      <input
+        type="text"
+        placeholder="Nome de Usuário"
+        v-model="name"
+        class="w-10/12 p-2 mb-4 bg-gray-700 rounded-lg outline-none text-white"
+      />
+      <input
+        type="email"
+        placeholder="Email"
+        v-model="email"
+        class="w-10/12 p-2 mb-4 bg-gray-700 rounded-lg outline-none text-white"
+      />
+      <input
+        type="password"
+        placeholder="Senha"
+        v-model="password"
+        class="w-10/12 p-2 mb-4 bg-gray-700 rounded-lg outline-none text-white"
+      />
+      <button
+        @click="signUp(name, email, password)"
+        class="bg-purple-500 hover:bg-purple-600 transition w-1/2 p-2 rounded-lg"
+      >
+        Cadastrar
+      </button>
+    </div>
+  </div>
 </template>
+
+<style scoped lang="postcss">
+.login {
+  @apply overflow-y-hidden mt-20 max-w-10;
+}
+</style>

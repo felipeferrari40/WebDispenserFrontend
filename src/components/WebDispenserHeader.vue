@@ -59,8 +59,8 @@ function scrollToSection(id: string) {
           </li>
           <li>
             <RouterLink
-              class="hover:bg-fontcolor hover:text-black rounded-full p-5 block"
               to="/"
+              class="hover:bg-fontcolor hover:text-black rounded-full p-5 block"
               @click="scrollToSection('services')"
               >Serviços</RouterLink
             >
@@ -92,39 +92,42 @@ function scrollToSection(id: string) {
               <RouterLink
                 class="hover:bg-fontcolor hover:text-black rounded-md p-3 block"
                 to="/"
-                @click="scrollToSection('#home')"
+                @click="scrollToSection('home')"
                 >Home</RouterLink
               >
             </li>
             <li>
-              <a
-                @click="scrollToSection('#about')"
+              <RouterLink
+                to="/"
+                @click="scrollToSection('about')"
                 class="hover:bg-fontcolor hover:text-black rounded-md p-3 block"
-                >Sobre</a
+                >Sobre</RouterLink
               >
             </li>
             <li>
-              <a
-                href="#services"
+              <RouterLink
+                to="/"
+                @click="scrollToSection('services')"
                 class="hover:bg-fontcolor hover:text-black rounded-md p-3 block"
-                >Serviços</a
+                >Serviços</RouterLink
               >
             </li>
             <li>
-              <a
-                href="#contact"
+              <RouterLink
+                to="/"
+                @click="scrollToSection('contact')"
                 class="hover:bg-fontcolor hover:text-black rounded-md p-3 block"
-                >Contato</a
+                >Contato</RouterLink
               >
             </li>
             <li>
-              <a
-                href="./login.html"
+              <RouterLink
+                to="/login"
                 class="hover:bg-fontcolor bg-purple-500 hover:text-black rounded-md p-3 block"
               >
                 <font-awesome-icon icon="right-to-bracket" />
                 Login
-              </a>
+              </RouterLink>
             </li>
           </ul>
         </div>
