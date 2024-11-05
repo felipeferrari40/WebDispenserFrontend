@@ -84,7 +84,7 @@ async function handleLogout() {
 async function addDevice() {
   const userToken = localStorage.getItem("authToken");
   await apiClient
-    .post(`/api/device`, { name: "Novo Dispositivo", userToken })
+    .post(`/api/device`, { name: "Novo Dispositivo", token: userToken })
     .then((response) => {
       if (response.data["status"] !== "error") {
         showToast(response.data["message"], "success");
