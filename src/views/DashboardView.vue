@@ -29,7 +29,13 @@ type Schedule = {
   command: string;
   time: string;
   info: string;
+  deviceId: string;
 };
+
+const timeRegex = /^([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/;
+
+const time = ref<string>("00:00:00");
+const isValidTime = ref<boolean>(true);
 
 function handleInput(event: Event) {
   const input = (event.target as HTMLInputElement).value;
@@ -39,6 +45,8 @@ function handleInput(event: Event) {
     .replace(/^(\d{2})(\d)/, "$1:$2")
     .replace(/:(\d{2})(\d)/, ":$1:$2")
     .slice(0, 8);
+
+  isValidTime.value = timeRegex.test(time.value);
 }
 
 const isModalOpen = ref(false);
@@ -70,7 +78,6 @@ const device = ref<Device | null>(null);
 const schedules = ref<Array<Schedule>>([]);
 
 const command = ref<string>("");
-const time = ref<string>("00:00:00");
 const info = ref<string>("");
 
 async function handleLogout() {
@@ -89,6 +96,29 @@ async function addDevice() {
       if (response.data["status"] !== "error") {
         showToast(response.data["message"], "success");
         fetchDevices();
+      } else {
+        showToast(response.data["message"]);
+      }
+    });
+}
+
+async function deleteSchedule(schedule: Schedule) {
+  const userToken = localStorage.getItem("authToken");
+  console.log(schedule);
+
+  await apiClient
+    .delete(`/api/schedule`, {
+      data: {
+        token: userToken,
+        deviceId: schedule.deviceId,
+        scheduleId: schedule.id,
+      },
+    })
+    .then(async (response) => {
+      if (response.data["status"] !== "error") {
+        showToast(response.data["message"], "success");
+        closeDeviceModal();
+        await fetchDevices();
       } else {
         showToast(response.data["message"]);
       }
@@ -115,7 +145,7 @@ async function deleteDevice(device: Device) {
     });
 }
 
-async function editDevice(
+async function addSchedule(
   deviceId: string,
   command: string,
   time: string,
@@ -166,7 +196,6 @@ async function fetchDevices() {
 }
 
 function fetchSchedule(selectedDevice: Device) {
-
   apiClient
     .get(`/api/device?token=${selectedDevice.token}`)
     .then(async (response) => {
@@ -295,19 +324,23 @@ onMounted(() => {
         v-model="time"
         maxlength="8"
         @input="handleInput"
-        class="w-10/12 p-2 mb-4 bg-gray-700 rounded-lg outline-none text-white"
+        class="w-10/12 p-2 bg-gray-700 rounded-lg outline-none text-white"
       />
+      <p v-if="!isValidTime" class="text-red-500">
+        Formato de horário inválido. Use HH:MM:SS
+      </p>
       <input
         placeholder="Observação"
         v-model="info"
-        class="w-10/12 p-2 mb-4 bg-gray-700 rounded-lg outline-none text-white"
+        class="w-10/12 p-2 my-4 bg-gray-700 rounded-lg outline-none text-white"
       />
       <button
         type="submit"
-        @click="editDevice(device.id, command, time, info)"
-        class="bg-purple-500 hover:bg-purple-600 transition w-1/2 p-2 rounded-lg"
+        :disabled="!isValidTime"
+        @click="addSchedule(device.id, command, time, info)"
+        class="bg-purple-500 transition w-1/2 p-2 rounded-lg"
       >
-        Editar
+        Adicionar
       </button>
     </div>
   </div>
@@ -333,6 +366,7 @@ onMounted(() => {
             <th class="px-6 py-3 font-semibold">Comando</th>
             <th class="px-6 py-3 font-semibold">Horário</th>
             <th class="px-6 py-3 font-semibold">Observação</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -340,6 +374,11 @@ onMounted(() => {
             <td class="px-6 py-4">{{ schedule.command }}</td>
             <td class="px-6 py-4">{{ schedule.time }}</td>
             <td class="px-6 py-4">{{ schedule.info }}</td>
+            <td class="px-6 py-4">
+              <button @click="deleteSchedule(schedule)">
+                <font-awesome-icon icon="delete-left" />
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>
