@@ -23,10 +23,28 @@ export function register(name: string, email: string, password: string) {
     });
 }
 
-export function logout(): Promise<boolean> {
-  localStorage.removeItem("authToken");
-  delete apiClient.defaults.headers.common["Authorization"];
-  return Promise.resolve(true)
+export function logout(userToken: string): Promise<boolean> {
+  return apiClient
+    .post("/api/logout", {
+      token: userToken,
+    })
+    .then((response) => {
+      const status = response.data["status"];
+
+      if (status !== "success") {
+        showToast("Falha no Logout! " + status);
+        return false;
+      } else {
+        showToast("Logout bem-sucedido!", "success");
+        localStorage.removeItem("authToken");
+        delete apiClient.defaults.headers.common["Authorization"];
+        return true;
+      }
+    })
+    .catch((error) => {
+      showToast("Falha no logout. " + error);
+      return false;
+    });
 }
 
 export function login(email: string, password: string): Promise<boolean> {
@@ -64,14 +82,10 @@ export function isAuthenticated() {
   }
 
   return apiClient
-    .get(`/api/user?token=${token}`)
+    .get(`/api/login?token=${token}`)
     .then((response) => {
       return response.status === 200;
     })
-    .catch((error) => {
-      showToast("Erro de autenticação. Por favor, faça login novamente.");
-      return false;
-    });
 }
 
 function setAuthToken(token: string) {

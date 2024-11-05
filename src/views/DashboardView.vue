@@ -60,7 +60,6 @@ function closeModal() {
   device.value = null;
 }
 
-
 function closeDeviceModal() {
   isDeviceModalOpen.value = false;
 }
@@ -75,16 +74,18 @@ const time = ref<string>("00:00:00");
 const info = ref<string>("");
 
 async function handleLogout() {
-  const success = await logout();
+  const userToken = localStorage.getItem("authToken");
+  const success = await logout(userToken!);
   if (success) {
     router.push("/");
   }
 }
 
 async function addDevice() {
-  const token = localStorage.getItem("authToken");
-  await apiClient.post(`/api/device`, { name: "Novo Dispositivo", token })
-    .then(response => {
+  const userToken = localStorage.getItem("authToken");
+  await apiClient
+    .post(`/api/device`, { name: "Novo Dispositivo", userToken })
+    .then((response) => {
       if (response.data["status"] !== "error") {
         showToast(response.data["message"], "success");
         fetchDevices();
@@ -94,14 +95,13 @@ async function addDevice() {
     });
 }
 
-
 async function deleteDevice(device: Device) {
-  const token = localStorage.getItem("authToken");
+  const userToken = localStorage.getItem("authToken");
 
   await apiClient
-    .delete(`/api/device?token=${device.token}`, {
+    .delete(`/api/device`, {
       data: {
-        token: token,
+        token: userToken,
         deviceId: device.id,
       },
     })
@@ -121,10 +121,10 @@ async function editDevice(
   time: string,
   info?: string
 ) {
-  const token = localStorage.getItem("authToken");
+  const userToken = localStorage.getItem("authToken");
   await apiClient
     .post(`/api/schedule`, {
-      token: token,
+      token: userToken,
       deviceId: deviceId,
       command: command,
       time: time,
@@ -133,7 +133,7 @@ async function editDevice(
     .then(async (response) => {
       if (response.data["status"] !== "error") {
         showToast(response.data["message"], "success");
-        clearForm()
+        clearForm();
         closeModal();
         await fetchDevices();
       } else {
@@ -143,16 +143,16 @@ async function editDevice(
 }
 
 function clearForm() {
-  command.value = ""
-  time.value = "00:00:00"
-  info.value = ""
+  command.value = "";
+  time.value = "00:00:00";
+  info.value = "";
 }
 
 async function fetchDevices() {
-  const token = localStorage.getItem("authToken");
+  const userToken = localStorage.getItem("authToken");
 
   await apiClient
-    .get(`/api/user?token=${token}`)
+    .get(`/api/user?token=${userToken}`)
     .then((response) => {
       if (response.data["status"] !== "error") {
         devices.value = response.data["devices"];
@@ -166,13 +166,10 @@ async function fetchDevices() {
 }
 
 function fetchSchedule(selectedDevice: Device) {
-  console.log(selectedDevice.id);
-  console.log(selectedDevice.token);
 
   apiClient
     .get(`/api/device?token=${selectedDevice.token}`)
     .then(async (response) => {
-      console.log(response);
       if (response.data["status"] !== "error") {
         schedules.value = response.data["schedule"];
         await fetchDevices();
