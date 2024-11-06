@@ -78,6 +78,8 @@ export function isAuthenticated() {
 
   if (!token) {
     showToast("Token ausente. Faça login novamente.");
+    localStorage.removeItem("authToken");
+    delete apiClient.defaults.headers.common["Authorization"];
     return false;
   }
 
