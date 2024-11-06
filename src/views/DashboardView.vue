@@ -19,23 +19,23 @@ library.add(faEdit, faRightFromBracket, faDeleteLeft, faEye);
 
 type Device = {
   id: string;
-  datetime: string;
-  amount: string;
+  name: string;
   token: string;
 };
 
 type Schedule = {
   id: string;
-  command: string;
   time: string;
-  info: string;
   deviceId: string;
+  info: string;
 };
 
 const timeRegex = /^([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/;
 
 const time = ref<string>("00:00:00");
 const isValidTime = ref<boolean>(true);
+
+const deviceName = ref<string>("");
 
 function handleInput(event: Event) {
   const input = (event.target as HTMLInputElement).value;
@@ -77,7 +77,6 @@ const device = ref<Device | null>(null);
 
 const schedules = ref<Array<Schedule>>([]);
 
-const command = ref<string>("");
 const info = ref<string>("");
 
 async function handleLogout() {
@@ -88,14 +87,85 @@ async function handleLogout() {
   }
 }
 
-async function addDevice() {
+function clearForm() {
+  deviceName.value = "";
+  time.value = "00:00:00";
+  info.value = "";
+}
+
+async function addDevice(deviceName: string) {
   const userToken = localStorage.getItem("authToken");
+
+  if (deviceName.length >= 4) {
+    await apiClient
+      .post(`/api/device`, { name: deviceName, token: userToken })
+      .then((response) => {
+        if (response.data["status"] !== "error") {
+          showToast(response.data["message"], "success");
+          clearForm();
+          fetchDevices();
+        } else {
+          showToast(response.data["message"]);
+        }
+      });
+  } else {
+    showToast("Adcione um nome ao dispositivo! (Mínimo de 4 dígitos)");
+  }
+}
+
+async function deleteDevice(device: Device) {
+  const userToken = localStorage.getItem("authToken");
+
   await apiClient
-    .post(`/api/device`, { name: "Novo Dispositivo", token: userToken })
-    .then((response) => {
+    .delete(`/api/device`, {
+      data: {
+        token: userToken,
+        deviceId: device.id,
+      },
+    })
+    .then(async (response) => {
       if (response.data["status"] !== "error") {
         showToast(response.data["message"], "success");
-        fetchDevices();
+        await fetchDevices();
+      } else {
+        showToast(response.data["message"]);
+      }
+    });
+}
+
+async function addSchedule(deviceId: string, time: string, info?: string) {
+  const userToken = localStorage.getItem("authToken");
+  await apiClient
+    .post(`/api/schedule`, {
+      token: userToken,
+      deviceId: deviceId,
+      command: "feed",
+      time: time,
+      info: info || null,
+    })
+    .then(async (response) => {
+      if (response.data["status"] !== "error") {
+        showToast(response.data["message"], "success");
+        clearForm();
+        closeModal();
+        await fetchDevices();
+      } else {
+        showToast(response.data["message"]);
+      }
+    });
+  await apiClient
+    .post(`/api/command`, {
+      token: userToken,
+      deviceId: deviceId,
+      command: "feed",
+      info: info || null,
+    })
+    .then(async (response) => {
+      if (response.data["status"] !== "error") {
+        showToast(response.data["message"], "success");
+        clearForm();
+        closeModal();
+        await fetchDevices();
       } else {
         showToast(response.data["message"]);
       }
@@ -123,59 +193,6 @@ async function deleteSchedule(schedule: Schedule) {
         showToast(response.data["message"]);
       }
     });
-}
-
-async function deleteDevice(device: Device) {
-  const userToken = localStorage.getItem("authToken");
-
-  await apiClient
-    .delete(`/api/device`, {
-      data: {
-        token: userToken,
-        deviceId: device.id,
-      },
-    })
-    .then(async (response) => {
-      if (response.data["status"] !== "error") {
-        showToast(response.data["message"], "success");
-        await fetchDevices();
-      } else {
-        showToast(response.data["message"]);
-      }
-    });
-}
-
-async function addSchedule(
-  deviceId: string,
-  command: string,
-  time: string,
-  info?: string
-) {
-  const userToken = localStorage.getItem("authToken");
-  await apiClient
-    .post(`/api/schedule`, {
-      token: userToken,
-      deviceId: deviceId,
-      command: command,
-      time: time,
-      info: info || null,
-    })
-    .then(async (response) => {
-      if (response.data["status"] !== "error") {
-        showToast(response.data["message"], "success");
-        clearForm();
-        closeModal();
-        await fetchDevices();
-      } else {
-        showToast(response.data["message"]);
-      }
-    });
-}
-
-function clearForm() {
-  command.value = "";
-  time.value = "00:00:00";
-  info.value = "";
 }
 
 async function fetchDevices() {
@@ -207,7 +224,7 @@ function fetchSchedule(selectedDevice: Device) {
       }
     })
     .catch(() => {
-      showToast("Erro ao buscar dispositivos.");
+      showToast("Erro ao buscar agendamento.");
     });
 }
 
@@ -220,16 +237,11 @@ onMounted(() => {
   <div class="flex h-screen bg-gray-100 dashboard">
     <aside class="w-64 bg-bgcolor text-fontcolor flex flex-col">
       <div class="p-6 text-2xl font-bold">Dashboard</div>
-      <nav class="flex flex-col space-y-4 p-6">
-        <span
-          to="/dashboard"
-          readonly
-          class="bg-gray-500 text-fontcolor p-5 rounded-full"
-          >Devices</span
-        >
-      </nav>
+      <span readonly class="bg-gray-500 text-fontcolor p-5 m-6 rounded-full"
+        >Dispositivos</span
+      >
       <button
-        @click="handleLogout()"
+        @click="handleLogout"
         class="text-lg mb-4 mt-auto ml-auto mr-4 justify-end"
       >
         <span
@@ -247,25 +259,47 @@ onMounted(() => {
             {{ devices.length }}
           </p>
         </div>
-        <button
-          @click="addDevice"
-          class="bg-bgcolor text-fontcolor p-6 rounded-lg shadow-md w-full"
-        >
+        <div class="bg-bgcolor text-fontcolor p-6 rounded-lg shadow-md w-full">
           <h2 class="text-xl font-bold">Adiconar Dispositivos</h2>
-        </button>
+          <div class="flex mt-2 w-full space-x-2">
+            <input
+              class="p-2 bg-fontcolor rounded-lg outline-none text-purple-500"
+              type="text"
+              placeholder="Nome"
+              minlength="4"
+              v-model="deviceName"
+            />
+            <button
+              :disabled="deviceName.length < 4"
+              class="border border-gray-500 rounded-lg px-3 flex-shrink-0"
+              @click="addDevice(deviceName)"
+            >
+              &plus;
+            </button>
+          </div>
+          <p
+            v-if="deviceName.length > 0 && deviceName.length < 4"
+            class="text-red-500 mt-2"
+          >
+            Mínimo de 4 dígitos
+          </p>
+        </div>
       </section>
 
       <section>
         <div class="bg-white p-6 rounded-lg shadow-md">
           <h2 class="text-xl font-bold mb-4">Dispositivos</h2>
           <table
-            class="min-w-full table-fixed text-center bg-fontcolor border border-gray-300"
+            class="min-w-full table-fixed text-center rounded-2xl overflow-hidden"
           >
             <thead>
               <tr class="bg-gray-100">
                 <th class="px-6 py-3 font-semibold">ID</th>
-                <th class="px-6 py-3 font-semibold">Visualizar</th>
-                <th class="px-6 py-3 font-semibold">Editar</th>
+                <th class="px-6 py-3 font-semibold">Token</th>
+
+                <th class="px-6 py-3 font-semibold">Nome</th>
+                <th class="px-6 py-3 font-semibold">Visualizar Programação</th>
+                <th class="px-6 py-3 font-semibold">Adicionar Programação</th>
                 <th class="px-6 py-3 font-semibold">Excluir</th>
                 <th></th>
               </tr>
@@ -277,6 +311,10 @@ onMounted(() => {
                 class="hover:bg-gray-50"
               >
                 <td class="px-6 py-4">{{ device.id }}</td>
+                <td class="px-6 py-4">{{ device.token }}</td>
+
+                <td class="px-6 py-4 text-nowrap">{{ device.name }}</td>
+
                 <td>
                   <button @click="openDeviceModal(device)">
                     <font-awesome-icon icon="eye" />
@@ -305,7 +343,7 @@ onMounted(() => {
     class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75 z-50"
   >
     <div
-      class="bg-gray-800 rounded-xl p-6 w-11/12 max-w-lg shadow-lg text-center text-white"
+      class="bg-gray-800 rounded-xl p-6 w-11/12 max-w-lg shadow-lg flex flex-col text-center text-white"
     >
       <button
         @click.stop="closeModal"
@@ -315,30 +353,37 @@ onMounted(() => {
       </button>
       <h2 class="text-xl mb-4">Adicionar Agendamento</h2>
       <input
-        placeholder="Comando"
-        v-model="command"
-        class="w-10/12 p-2 mb-4 bg-gray-700 rounded-lg outline-none text-white"
-      />
-      <input
         placeholder="Horário"
         v-model="time"
         maxlength="8"
         @input="handleInput"
-        class="w-10/12 p-2 bg-gray-700 rounded-lg outline-none text-white"
+        class="w-3/4 mx-auto p-2 bg-gray-700 rounded-lg outline-none text-white"
       />
       <p v-if="!isValidTime" class="text-red-500">
         Formato de horário inválido. Use HH:MM:SS
       </p>
-      <input
-        placeholder="Observação"
+      <select
+        placeholder="Quantidade"
         v-model="info"
-        class="w-10/12 p-2 my-4 bg-gray-700 rounded-lg outline-none text-white"
-      />
+        class="w-3/4 mx-auto p-2 my-4 bg-gray-700 rounded-lg outline-none text-white"
+      >
+        <option value="" disabled selected>Selecione um valor</option>
+        <option value="100">100g</option>
+        <option value="200">200g</option>
+        <option value="300">300g</option>
+        <option value="400">400g</option>
+        <option value="500">500g</option>
+        <option value="600">600g</option>
+        <option value="700">700g</option>
+        <option value="800">800g</option>
+        <option value="900">900g</option>
+        <option value="1000">1kg</option>
+      </select>
       <button
         type="submit"
         :disabled="!isValidTime"
-        @click="addSchedule(device.id, command, time, info)"
-        class="bg-purple-500 transition w-1/2 p-2 rounded-lg"
+        @click="addSchedule(device.id, time, info)"
+        class="bg-purple-500 transition w-1/2 p-2 rounded-lg mx-auto"
       >
         Adicionar
       </button>
@@ -363,17 +408,15 @@ onMounted(() => {
       >
         <thead>
           <tr class="bg-purple-500">
-            <th class="px-6 py-3 font-semibold">Comando</th>
             <th class="px-6 py-3 font-semibold">Horário</th>
-            <th class="px-6 py-3 font-semibold">Observação</th>
+            <th class="px-6 py-3 font-semibold">Quantidade</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="schedule in schedules" :key="schedule.id">
-            <td class="px-6 py-4">{{ schedule.command }}</td>
             <td class="px-6 py-4">{{ schedule.time }}</td>
-            <td class="px-6 py-4">{{ schedule.info }}</td>
+            <td class="px-6 py-4">{{ schedule.info }}g</td>
             <td class="px-6 py-4">
               <button @click="deleteSchedule(schedule)">
                 <font-awesome-icon icon="delete-left" />
