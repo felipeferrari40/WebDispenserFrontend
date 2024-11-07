@@ -83,11 +83,15 @@ export function isAuthenticated() {
     return false;
   }
 
-  return apiClient
-    .get(`/api/login?token=${token}`)
-    .then((response) => {
-      return response.status === 200;
-    })
+  return apiClient.get(`/api/login?token=${token}`).then((response) => {
+    if (response.data["status"] == "error") {
+      localStorage.removeItem("authToken");
+      delete apiClient.defaults.headers.common["Authorization"];
+      return false;
+    } else {
+      return true;
+    }
+  });
 }
 
 function setAuthToken(token: string) {

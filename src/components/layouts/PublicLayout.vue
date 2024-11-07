@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { RouterView } from "vue-router";
 import WebDispenserHeader from "../WebDispenserHeader.vue";
-import WebDispenserFooter from "../WebDispenserFooter.vue"
+import WebDispenserFooter from "../WebDispenserFooter.vue";
 </script>
 
 <template>
@@ -11,12 +11,8 @@ import WebDispenserFooter from "../WebDispenserFooter.vue"
 </template>
 
 <style lang="postcss">
-@media (min-width: 1024px) {
-  .about {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-  }
+.about {
+  @apply md:min-h-screen md:flex md:align-middle;
 }
 
 section {
@@ -32,7 +28,7 @@ h2 {
 }
 
 .article {
-  @apply w-2/3 mx-auto
+  @apply md:w-2/3 md:mx-auto w-full;
 }
 
 html {

@@ -28,7 +28,7 @@ function scrollToSection(id: string) {
 </script>
 
 <template>
-  <header class="fixed top-0 w-full h-30 bg-bgcolor text-fontcolor shadow-md">
+  <header class="fixed top-0 w-full h-30 bg-bgcolor text-fontcolor shadow-md z-10">
     <nav class="grid grid-cols-2 h-full m-10">
       <div
         class="sm:pl-20 justify-start flex font-bold text-2xl align-middle items-center"

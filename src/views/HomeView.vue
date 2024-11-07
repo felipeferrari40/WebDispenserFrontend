@@ -170,7 +170,7 @@
             <p>São Paulo</p>
           </div>
         </div>
-        <div class="space-x-2 mx-8">
+        <div class="space-x-2 md:mx-8">
           <form class="grid grid-cols-2 grid-rows-3">
             <input
               type="text"
@@ -200,3 +200,11 @@
     </section>
   </div>
 </template>
+
+<style lang="postcss" scoped>
+.article {
+  @apply w-full
+}
+
+
+</style>

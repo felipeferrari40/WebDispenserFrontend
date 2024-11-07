@@ -2,7 +2,7 @@
 import { library } from "@fortawesome/fontawesome-svg-core";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import {
-  faEdit,
+  faAdd,
   faRightFromBracket,
   faDeleteLeft,
   faEye,
@@ -15,7 +15,7 @@ import { logout } from "@/router/auth";
 
 const router = useRouter();
 
-library.add(faEdit, faRightFromBracket, faDeleteLeft, faEye);
+library.add(faAdd, faRightFromBracket, faDeleteLeft, faEye);
 
 type Device = {
   id: string;
@@ -204,6 +204,7 @@ async function fetchDevices() {
       if (response.data["status"] !== "error") {
         devices.value = response.data["devices"];
       } else {
+        devices.value = [];
         showToast(response.data["message"]);
       }
     })
@@ -234,8 +235,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex h-screen bg-gray-100 dashboard">
-    <aside class="w-64 bg-bgcolor text-fontcolor flex flex-col">
+  <div class="flex h-screen dashboard">
+    <aside class="w-64 bg-bgcolor text-fontcolor hidden md:flex flex-col aside">
       <div class="p-6 text-2xl font-bold">Dashboard</div>
       <span readonly class="bg-gray-500 text-fontcolor p-5 m-6 rounded-full"
         >Dispositivos</span
@@ -251,38 +252,48 @@ onMounted(() => {
       </button>
     </aside>
 
-    <main class="flex-col p-6 w-2/3 mx-auto">
-      <section class="grid grid-cols-1 space-x-8 md:grid-cols-2 lg:grid-cols-3">
-        <div class="bg-white p-6 rounded-lg shadow-md w-full">
+    <main
+      class="flex flex-col flex-shrink-1 h-screen md:p-6 md:w-2/3 bg-gray-100"
+    >
+      <section class="grid grid-cols-1 space-y-4 md:space-y-0 md:grid-cols-2">
+        <div
+          class="bg-white p-6 rounded-lg shadow-md md:w-4/5 justify-self-start w-1/2"
+        >
           <h2 class="text-xl font-bold mb-2">Total de Dispositivos</h2>
           <p class="text-lg">
             {{ devices.length }}
           </p>
         </div>
-        <div class="bg-bgcolor text-fontcolor p-6 rounded-lg shadow-md w-full">
-          <h2 class="text-xl font-bold">Adiconar Dispositivos</h2>
-          <div class="flex mt-2 w-full space-x-2">
-            <input
-              class="p-2 bg-fontcolor rounded-lg outline-none text-purple-500"
-              type="text"
-              placeholder="Nome"
-              minlength="4"
-              v-model="deviceName"
-            />
-            <button
-              :disabled="deviceName.length < 4"
-              class="border border-gray-500 rounded-lg px-3 flex-shrink-0"
-              @click="addDevice(deviceName)"
-            >
-              &plus;
-            </button>
+        <div
+          class="bg-bgcolor text-fontcolor md:w-4/5 md:justify-self-end p-6 rounded-lg shadow-md w-1/2 justify-self-start"
+        >
+          <h2 class="text-xl font-bold mb-4">Adicionar Dispositivos</h2>
+          <div>
+            <div class="mt-2 w-full flex">
+              <input
+                class="p-3 w-full mr-4 bg-fontcolor rounded-lg outline-none text-purple-500"
+                type="text"
+                placeholder="Nome"
+                minlength="4"
+                v-model="deviceName"
+              />
+              <button
+                :disabled="deviceName.length < 4"
+                class="border border-gray-500 rounded-lg p-3 bg-purple-500 hover:bg-gray-300 disabled:opacity-50"
+                @click="addDevice(deviceName)"
+              >
+                <font-awesome-icon icon="plus" />
+              </button>
+            </div>
+            <div>
+              <p
+                v-if="deviceName.length > 0 && deviceName.length < 4"
+                class="text-red-500 mt-2"
+              >
+                Mínimo de 4 dígitos
+              </p>
+            </div>
           </div>
-          <p
-            v-if="deviceName.length > 0 && deviceName.length < 4"
-            class="text-red-500 mt-2"
-          >
-            Mínimo de 4 dígitos
-          </p>
         </div>
       </section>
 
@@ -295,8 +306,6 @@ onMounted(() => {
             <thead>
               <tr class="bg-gray-100">
                 <th class="px-6 py-3 font-semibold">ID</th>
-                <th class="px-6 py-3 font-semibold">Token</th>
-
                 <th class="px-6 py-3 font-semibold">Nome</th>
                 <th class="px-6 py-3 font-semibold">Visualizar Programação</th>
                 <th class="px-6 py-3 font-semibold">Adicionar Programação</th>
@@ -311,10 +320,7 @@ onMounted(() => {
                 class="hover:bg-gray-50"
               >
                 <td class="px-6 py-4">{{ device.id }}</td>
-                <td class="px-6 py-4">{{ device.token }}</td>
-
                 <td class="px-6 py-4 text-nowrap">{{ device.name }}</td>
-
                 <td>
                   <button @click="openDeviceModal(device)">
                     <font-awesome-icon icon="eye" />
@@ -322,7 +328,7 @@ onMounted(() => {
                 </td>
                 <td>
                   <button @click="openModal(device)">
-                    <font-awesome-icon icon="edit" />
+                    <font-awesome-icon icon="add" />
                   </button>
                 </td>
                 <td>
@@ -333,6 +339,17 @@ onMounted(() => {
               </tr>
             </tbody>
           </table>
+        </div>
+        <div class="md:hidden mt-10 flex">
+          <button
+            @click="handleLogout"
+            class="align-bottom text-lg mb-4 mt-auto mr-4 justify-end"
+          >
+            <span
+              >Logout
+              <font-awesome-icon class="ml-2" icon="right-from-bracket" />
+            </span>
+          </button>
         </div>
       </section>
     </main>
@@ -429,8 +446,8 @@ onMounted(() => {
   </div>
 </template>
 
-<style lang="postcss">
+<style scoped lang="postcss">
 .dashboard {
-  @apply text-bgcolor h-full min-h-screen;
+  @apply text-bgcolor;
 }
 </style>
