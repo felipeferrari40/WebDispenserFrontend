@@ -307,8 +307,8 @@ onMounted(() => {
               <tr class="bg-gray-100">
                 <th class="px-6 py-3 font-semibold">ID</th>
                 <th class="px-6 py-3 font-semibold">Nome</th>
-                <th class="px-6 py-3 font-semibold">Visualizar Programação</th>
-                <th class="px-6 py-3 font-semibold">Adicionar Programação</th>
+                <th class="px-6 py-3 font-semibold">Visualizar</th>
+                <th class="px-6 py-3 font-semibold">Programar</th>
                 <th class="px-6 py-3 font-semibold">Excluir</th>
                 <th></th>
               </tr>
@@ -354,13 +354,13 @@ onMounted(() => {
                 <span>{{ device.name }}</span>
               </div>
               <div class="flex justify-between items-center mb-2">
-                <span class="font-semibold">Visualizar Programação:</span>
+                <span class="font-semibold">Visualizar:</span>
                 <button @click="openDeviceModal(device)">
                   <font-awesome-icon icon="eye" />
                 </button>
               </div>
               <div class="flex justify-between items-center mb-2">
-                <span class="font-semibold">Adicionar Programação:</span>
+                <span class="font-semibold">Programar:</span>
                 <button @click="openModal(device)">
                   <font-awesome-icon icon="add" />
                 </button>
