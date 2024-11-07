@@ -257,7 +257,7 @@ onMounted(() => {
     >
       <section class="grid grid-cols-1 space-y-4 md:space-y-0 md:grid-cols-2">
         <div
-          class="bg-white p-6 rounded-lg shadow-md md:w-4/5 justify-self-start w-1/2"
+          class="bg-white p-6 rounded-lg shadow-md md:w-4/5 justify-self-start w-full"
         >
           <h2 class="text-xl font-bold mb-2">Total de Dispositivos</h2>
           <p class="text-lg">
@@ -265,7 +265,7 @@ onMounted(() => {
           </p>
         </div>
         <div
-          class="bg-bgcolor text-fontcolor md:w-4/5 md:justify-self-end p-6 rounded-lg shadow-md w-1/2 justify-self-start"
+          class="bg-bgcolor text-fontcolor md:w-4/5 md:justify-self-end p-6 rounded-lg shadow-md w-full justify-self-start"
         >
           <h2 class="text-xl font-bold mb-4">Adicionar Dispositivos</h2>
           <div>
@@ -301,7 +301,7 @@ onMounted(() => {
         <div class="bg-white p-6 rounded-lg shadow-md">
           <h2 class="text-xl font-bold mb-4">Dispositivos</h2>
           <table
-            class="min-w-full table-fixed text-center rounded-2xl overflow-hidden"
+            class="hidden md:table min-w-full table-fixed text-center rounded-2xl overflow-hidden"
           >
             <thead>
               <tr class="bg-gray-100">
@@ -339,6 +339,40 @@ onMounted(() => {
               </tr>
             </tbody>
           </table>
+          <div class="md:hidden space-y-4">
+            <div
+              v-for="device in devices"
+              :key="device.id"
+              class="border rounded-lg p-4 bg-gray-100 shadow"
+            >
+              <div class="flex justify-between items-center mb-2">
+                <span class="font-semibold">ID:</span>
+                <span>{{ device.id }}</span>
+              </div>
+              <div class="flex justify-between items-center mb-2">
+                <span class="font-semibold">Nome:</span>
+                <span>{{ device.name }}</span>
+              </div>
+              <div class="flex justify-between items-center mb-2">
+                <span class="font-semibold">Visualizar Programação:</span>
+                <button @click="openDeviceModal(device)">
+                  <font-awesome-icon icon="eye" />
+                </button>
+              </div>
+              <div class="flex justify-between items-center mb-2">
+                <span class="font-semibold">Adicionar Programação:</span>
+                <button @click="openModal(device)">
+                  <font-awesome-icon icon="add" />
+                </button>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="font-semibold">Excluir:</span>
+                <button @click="deleteDevice(device)">
+                  <font-awesome-icon icon="delete-left" />
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="md:hidden mt-10 flex">
           <button
