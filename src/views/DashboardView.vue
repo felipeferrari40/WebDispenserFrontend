@@ -235,7 +235,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex h-screen dashboard">
+  <div class="flex h-screen bg-gray-100 dashboard">
     <aside class="w-64 bg-bgcolor text-fontcolor hidden md:flex flex-col aside">
       <div class="p-6 text-2xl font-bold">Dashboard</div>
       <span readonly class="bg-gray-500 text-fontcolor p-5 m-6 rounded-full"
