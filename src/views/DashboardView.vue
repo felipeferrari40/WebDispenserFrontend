@@ -298,7 +298,7 @@ onMounted(() => {
       </section>
 
       <section>
-        <div class="bg-white p-6 rounded-lg shadow-md">
+        <div class="bg-white p-6 rounded-lg w-full shadow-md">
           <h2 class="text-xl font-bold mb-4">Dispositivos</h2>
           <table
             class="hidden md:table min-w-full table-fixed text-center rounded-2xl overflow-hidden"
@@ -339,7 +339,7 @@ onMounted(() => {
               </tr>
             </tbody>
           </table>
-          <div class="md:hidden space-y-4">
+          <div class="md:hidden w-full space-y-4">
             <div
               v-for="device in devices"
               :key="device.id"
