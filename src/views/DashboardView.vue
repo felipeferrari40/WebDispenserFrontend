@@ -386,15 +386,8 @@ onMounted(() => {
       >
         <option value="" disabled selected>Selecione um valor</option>
         <option value="100">100g</option>
+        <option value="150">150g</option>
         <option value="200">200g</option>
-        <option value="300">300g</option>
-        <option value="400">400g</option>
-        <option value="500">500g</option>
-        <option value="600">600g</option>
-        <option value="700">700g</option>
-        <option value="800">800g</option>
-        <option value="900">900g</option>
-        <option value="1000">1kg</option>
       </select>
       <button
         type="submit"
