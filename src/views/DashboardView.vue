@@ -136,7 +136,7 @@ async function fastAction(device: Device, info: string) {
       if (response.data["status"] !== "error") {
         showToast(response.data["message"], "success");
         clearForm();
-        closeModal();
+        closeFastModal();
         await fetchDevices();
       } else {
         showToast(response.data["message"]);
