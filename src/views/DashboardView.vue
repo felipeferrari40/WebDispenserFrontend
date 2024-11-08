@@ -6,6 +6,7 @@ import {
   faRightFromBracket,
   faDeleteLeft,
   faEye,
+  faPlay,
 } from "@fortawesome/free-solid-svg-icons";
 import { onMounted, ref } from "vue";
 import apiClient from "@/services/axios";
@@ -15,7 +16,7 @@ import { logout } from "@/router/auth";
 
 const router = useRouter();
 
-library.add(faAdd, faRightFromBracket, faDeleteLeft, faEye);
+library.add(faPlay, faAdd, faRightFromBracket, faDeleteLeft, faEye);
 
 type Device = {
   id: string;
@@ -56,20 +57,29 @@ function openModal(selectedDevice: Device) {
   device.value = selectedDevice;
 }
 
-const isDeviceModalOpen = ref(false);
-
-function openDeviceModal(selectedDevice: Device) {
-  isDeviceModalOpen.value = true;
-  fetchSchedule(selectedDevice);
-}
-
 function closeModal() {
   isModalOpen.value = false;
   device.value = null;
 }
+const isDeviceModalOpen = ref(false);
+
+function openDeviceModal(selectedDevice: Device) {
+  isDeviceModalOpen.value = true;
+  device.value = selectedDevice;
+  fetchSchedule(selectedDevice);
+}
 
 function closeDeviceModal() {
   isDeviceModalOpen.value = false;
+}
+
+const isFastModalOpen = ref(false);
+function openFastModal(selectedDevice: Device) {
+  isFastModalOpen.value = true;
+  device.value = selectedDevice;
+}
+function closeFastModal() {
+  isFastModalOpen.value = false;
 }
 
 const devices = ref<Array<Device>>([]);
@@ -113,6 +123,27 @@ async function addDevice(deviceName: string) {
   }
 }
 
+async function fastAction(device: Device, info: string) {
+  const userToken = localStorage.getItem("authToken");
+  await apiClient
+    .post(`/api/command`, {
+      token: userToken,
+      deviceId: device.id,
+      command: "feed",
+      info: info,
+    })
+    .then(async (response) => {
+      if (response.data["status"] !== "error") {
+        showToast(response.data["message"], "success");
+        clearForm();
+        closeModal();
+        await fetchDevices();
+      } else {
+        showToast(response.data["message"]);
+      }
+    });
+}
+
 async function deleteDevice(device: Device) {
   const userToken = localStorage.getItem("authToken");
 
@@ -141,23 +172,6 @@ async function addSchedule(deviceId: string, time: string, info?: string) {
       deviceId: deviceId,
       command: "feed",
       time: time,
-      info: info || null,
-    })
-    .then(async (response) => {
-      if (response.data["status"] !== "error") {
-        showToast(response.data["message"], "success");
-        clearForm();
-        closeModal();
-        await fetchDevices();
-      } else {
-        showToast(response.data["message"]);
-      }
-    });
-  await apiClient
-    .post(`/api/command`, {
-      token: userToken,
-      deviceId: deviceId,
-      command: "feed",
       info: info || null,
     })
     .then(async (response) => {
@@ -305,8 +319,8 @@ onMounted(() => {
           >
             <thead>
               <tr class="bg-gray-100">
-                <th class="px-6 py-3 font-semibold">ID</th>
                 <th class="px-6 py-3 font-semibold">Nome</th>
+                <th class="px-6 py-3 font-semibold">Ação Rápida</th>
                 <th class="px-6 py-3 font-semibold">Visualizar</th>
                 <th class="px-6 py-3 font-semibold">Programar</th>
                 <th class="px-6 py-3 font-semibold">Excluir</th>
@@ -319,8 +333,12 @@ onMounted(() => {
                 :key="device.id"
                 class="hover:bg-gray-50"
               >
-                <td class="px-6 py-4">{{ device.id }}</td>
                 <td class="px-6 py-4 text-nowrap">{{ device.name }}</td>
+                <td>
+                  <button @click="openFastModal(device)">
+                    <font-awesome-icon icon="play" />
+                  </button>
+                </td>
                 <td>
                   <button @click="openDeviceModal(device)">
                     <font-awesome-icon icon="eye" />
@@ -352,6 +370,12 @@ onMounted(() => {
               <div class="flex justify-between items-center mb-2">
                 <span class="font-semibold">Nome:</span>
                 <span>{{ device.name }}</span>
+              </div>
+              <div class="flex justify-between items-center mb-2">
+                <span class="font-semibold">Ação Rápida:</span>
+                <button @click="openFastModal(device)">
+                  <font-awesome-icon icon="play" />
+                </button>
               </div>
               <div class="flex justify-between items-center mb-2">
                 <span class="font-semibold">Visualizar:</span>
@@ -390,18 +414,58 @@ onMounted(() => {
   </div>
 
   <div
+    v-if="isFastModalOpen && device"
+    class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75 z-50"
+  >
+    <div
+      class="bg-gray-800 rounded-xl p-6 w-11/12 max-w-lg shadow-lg flex flex-col text-center text-white"
+    >
+      <div class="flex justify-around items-center">
+        <span class="opacity-50"> Device Token: {{ device?.token }} </span>
+        <span
+          @click.stop="closeFastModal"
+          class="text-2xl text-gray-400 hover:text-white hover:cursor-pointer"
+        >
+          &times;
+        </span>
+      </div>
+      <select
+        placeholder="Quantidade"
+        v-model="info"
+        class="w-3/4 mx-auto p-2 my-4 bg-gray-700 rounded-lg outline-none text-white"
+      >
+        <option value="" disabled selected>Selecione um valor</option>
+        <option value="100">100g</option>
+        <option value="150">150g</option>
+        <option value="200">200g</option>
+      </select>
+      <button
+        type="submit"
+        :disabled="!isValidTime"
+        @click="fastAction(device, info)"
+        class="bg-purple-500 transition w-1/2 p-2 rounded-lg mx-auto"
+      >
+        Adicionar
+      </button>
+    </div>
+  </div>
+
+  <div
     v-if="isModalOpen && device"
     class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-75 z-50"
   >
     <div
       class="bg-gray-800 rounded-xl p-6 w-11/12 max-w-lg shadow-lg flex flex-col text-center text-white"
     >
-      <button
-        @click.stop="closeModal"
-        class="ml-auto flex text-2xl text-gray-400 hover:text-white hover:cursor-pointer"
-      >
-        &times;
-      </button>
+      <div class="flex justify-around items-center">
+        <span class="opacity-50"> Device Token: {{ device?.token }} </span>
+        <span
+          @click.stop="closeModal"
+          class="text-2xl text-gray-400 hover:text-white hover:cursor-pointer"
+        >
+          &times;
+        </span>
+      </div>
       <h2 class="text-xl mb-4">Adicionar Agendamento</h2>
       <input
         placeholder="Horário"
@@ -441,12 +505,15 @@ onMounted(() => {
     <div
       class="bg-gray-800 rounded-xl p-6 w-11/12 max-w-lg shadow-lg text-center text-white"
     >
-      <button
-        @click.stop="closeDeviceModal"
-        class="ml-auto flex text-2xl text-gray-400 hover:text-white hover:cursor-pointer"
-      >
-        &times;
-      </button>
+      <div class="flex justify-around items-center">
+        <span class="opacity-50"> Device Token: {{ device?.token }} </span>
+        <span
+          @click.stop="closeDeviceModal"
+          class="text-2xl text-gray-400 hover:text-white hover:cursor-pointer"
+        >
+          &times;
+        </span>
+      </div>
       <table
         class="min-w-full table-fixed text-center mt-4 rounded-xl overflow-hidden"
       >
