@@ -122,7 +122,7 @@ onMounted(() => {
 
         <div class="flex justify-between items-center w-3/4 lg:w-2/3 text-sm">
           <button @click="openModal" class="text-purple-400 underline">
-            Esqueceu seu email?
+            Esqueceu sua senha?
           </button>
         </div>
 

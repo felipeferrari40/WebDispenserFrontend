@@ -445,7 +445,7 @@ onMounted(() => {
         @click="fastAction(device, info)"
         class="bg-purple-500 transition w-1/2 p-2 rounded-lg mx-auto"
       >
-        Dispejar
+        Despejar
       </button>
     </div>
   </div>
