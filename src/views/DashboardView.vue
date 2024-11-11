@@ -441,11 +441,11 @@ onMounted(() => {
       </select>
       <button
         type="submit"
-        :disabled="!isValidTime"
+        :disabled="!info"
         @click="fastAction(device, info)"
         class="bg-purple-500 transition w-1/2 p-2 rounded-lg mx-auto"
       >
-        Adicionar
+        Dispejar
       </button>
     </div>
   </div>
